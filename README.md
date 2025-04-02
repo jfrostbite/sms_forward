@@ -361,4 +361,19 @@ bool isVerificationCode(const std::string& message) {
 
 ## License
 
-[Your license information here]
+### Proprietary License
+
+Copyright (c) 2025 J.Kev.Fen
+
+All rights reserved.
+
+This software and associated documentation files (the "Software") are the proprietary property of the copyright holder. You are granted a limited, non-transferable right to use the Software solely for personal, non-commercial purposes.
+
+**Restrictions:**
+
+1. You may NOT modify, adapt, or create derivative works based on the Software.
+2. You may NOT use the Software for commercial purposes.
+3. You may NOT distribute, sublicense, or make the Software available to any third party.
+4. You may NOT reverse engineer, decompile, or disassemble the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

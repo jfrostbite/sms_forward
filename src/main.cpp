@@ -1,3 +1,17 @@
+/*
+ * SMS Forward - A utility to forward SMS messages to WxPusher
+ *
+ * Copyright (c) 2025 J.Kev.Fen
+ * All rights reserved.
+ *
+ * This software is proprietary and confidential.
+ * Use is subject to license terms.
+ *
+ * You may NOT modify, adapt, or create derivative works based on this software.
+ * You may NOT use this software for commercial purposes.
+ * You may NOT distribute, sublicense, or make this software available to any third party.
+ */
+
 #include "sms_monitor.hpp"
 #include "wx_pusher.hpp"
 #include "config.hpp"
@@ -12,15 +26,15 @@ bool isVerificationCode(const std::string& message) {
             LOG_WARNING("Empty message passed to isVerificationCode");
             return false;
         }
-        
+
         // Simple check for common verification code keywords before using regex
         // This is faster and less prone to errors
-        if (message.find("\u9a8c\u8bc1\u7801") != std::string::npos || 
-            message.find("code") != std::string::npos || 
+        if (message.find("\u9a8c\u8bc1\u7801") != std::string::npos ||
+            message.find("code") != std::string::npos ||
             message.find("Code") != std::string::npos) {
             return true;
         }
-        
+
         // Common verification code patterns in Chinese SMS messages
         try {
             static const std::vector<std::regex> patterns = {
@@ -31,7 +45,7 @@ bool isVerificationCode(const std::string& message) {
                 std::regex("[0-9]{4,6}\uff08[^\uff09]*\u9a8c\u8bc1[^\uff09]*\uff09"),    // 123456 (verification)
                 std::regex("\\[.*\\][^0-9]*([0-9]{4,6})")
             };
-            
+
             // Check if the message matches any of the patterns
             for (const auto& pattern : patterns) {
                 try {
@@ -47,14 +61,14 @@ bool isVerificationCode(const std::string& message) {
             LOG_ERROR("Exception in patterns initialization: " + std::string(e.what()));
             // Continue with keyword check
         }
-        
+
         // Check for common verification code keywords
         try {
             static const std::vector<std::string> keywords = {
                 "\u9a8c\u8bc1\u7801", "\u9a8c\u8bc1\u78bc", "\u6821\u9a8c\u7801", "\u6821\u9a8c\u78bc", "\u52a8\u6001\u7801", "\u52a8\u6001\u78bc",
                 "\u786e\u8ba4\u7801", "\u78ba\u8a8d\u78bc", "\u77ed\u4fe1\u7801", "\u77ed\u4fe1\u78bc", "code", "Code", "CODE"
             };
-            
+
             for (const auto& keyword : keywords) {
                 try {
                     if (message.find(keyword) != std::string::npos) {
@@ -79,7 +93,7 @@ bool isVerificationCode(const std::string& message) {
         } catch (const std::exception& e) {
             LOG_ERROR("Exception in keywords initialization: " + std::string(e.what()));
         }
-        
+
         return false;
     } catch (const std::exception& e) {
         LOG_ERROR("Exception in isVerificationCode: " + std::string(e.what()));
@@ -98,12 +112,12 @@ int main(int argc, char* argv[]) {
         }
 
         LOG_INFO("SMS Forward service starting...");
-        
+
         // 显示调试模式状态
         if (Config::getInstance().getDebugMode()) {
             LOG_INFO("Debug mode enabled");
         }
-        
+
         // 设置全局异常处理
         std::set_terminate([]() {
             try {
@@ -117,10 +131,10 @@ int main(int argc, char* argv[]) {
             } catch (...) {
                 LOG_ERROR("Unknown unhandled exception");
             }
-            
+
             // 记录调用栈
             LOG_ERROR("Stack trace:\n" + Logger::getInstance().getStackTrace());
-            
+
             // 终止程序
             abort();
         });
