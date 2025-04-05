@@ -99,10 +99,10 @@ void SmsMonitor::processSms(MMSms* sms) {
     MMSmsStorage storage = mm_sms_get_storage(sms);
     LOG_DEBUG("SMS storage type: " + std::to_string(storage));
 
-    // Only process SMS messages with storage type MM_SMS_STORAGE_SM (SM = SIM card)
-    // Skip MM_SMS_STORAGE_ME (ME = mobile equipment) to avoid duplicates
-    if (storage == MM_SMS_STORAGE_ME) {
-        LOG_DEBUG("Skipping SMS with storage type ME (mobile equipment) to avoid duplicate processing");
+    // Only process SMS messages with storage type MM_SMS_STORAGE_ME (ME = mobile equipment)
+    // Skip MM_SMS_STORAGE_SM (SM = SIM card) to avoid duplicates
+    if (storage != MM_SMS_STORAGE_ME) {
+        LOG_DEBUG("Skipping SMS with storage type " + std::to_string(storage) + " (only processing ME storage)");
         return;
     }
 

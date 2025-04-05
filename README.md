@@ -189,7 +189,7 @@ The application implements several smart features to ensure reliable SMS forward
    - Prevents crashes when manually created SMS messages are detected
    - ModemManager sometimes reports the same SMS in two storage locations (ME and SM)
    - The application filters messages by storage type to avoid duplicate forwarding
-   - Only messages stored in the SIM card (SM) are processed
+   - Only messages stored in the Mobile Equipment (ME) are processed
 
 3. **Robust Error Handling and Debugging**:
    - Global exception handling to catch and log unhandled exceptions
@@ -263,7 +263,7 @@ If you encounter issues:
    ```
 
    If you see duplicate messages with different storage types (ME and SM), this is normal.
-   The application is designed to handle this and only process one copy.
+   The application is designed to handle this and only process messages stored in ME (Mobile Equipment).
 
 6. If SMS content is not being forwarded:
    - Check if there's a delay in the ModemManager processing the SMS
