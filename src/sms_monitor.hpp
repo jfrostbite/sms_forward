@@ -20,7 +20,7 @@
 
 class SmsMonitor {
 public:
-    using SmsCallback = std::function<void(const std::string&, const std::string&)>;
+    using SmsCallback = std::function<void(const std::string&, const std::string&, MMSms*)>;
 
     SmsMonitor();
     ~SmsMonitor();
@@ -29,6 +29,7 @@ public:
     void setCallback(SmsCallback callback);
     void run();
     void checkExistingSms();
+    bool deleteSms(MMSms* sms);
 
 private:
     DBusConnection* connection;

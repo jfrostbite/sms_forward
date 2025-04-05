@@ -25,12 +25,14 @@ public:
     bool getForwardExistingSms() const { return forward_existing_sms; }
     bool getOnlyForwardVerificationCodes() const { return only_forward_verification_codes; }
     bool getDebugMode() const { return debug_mode; }
+    bool getDeleteAfterForwarding() const { return delete_after_forwarding; }
 
 private:
-    Config() : forward_existing_sms(true), only_forward_verification_codes(false), debug_mode(false) {} // Default values for backward compatibility
+    Config() : forward_existing_sms(true), only_forward_verification_codes(false), debug_mode(false), delete_after_forwarding(false) {} // Default values for backward compatibility
     std::string wx_pusher_token;
     std::string wx_pusher_uid;
     bool forward_existing_sms; // Whether to forward existing SMS messages at startup
     bool only_forward_verification_codes; // Whether to only forward verification code SMS messages
     bool debug_mode; // Whether to enable debug logging
+    bool delete_after_forwarding; // Whether to delete SMS messages after forwarding
 };

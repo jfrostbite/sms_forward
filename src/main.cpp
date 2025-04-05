@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        monitor.setCallback([&pusher](const std::string& sender, const std::string& content) {
+        monitor.setCallback([&pusher, &monitor](const std::string& sender, const std::string& content, MMSms* sms) {
             try {
                 LOG_DEBUG("Callback invoked with sender=" + sender + ", content=" + content);
 
@@ -181,9 +181,19 @@ int main(int argc, char* argv[]) {
                     }
                 }
 
+                bool forwarding_success = false;
                 try {
-                    bool result = pusher.sendMessage("New SMS from " + sender, content);
-                    LOG_DEBUG("WxPusher sendMessage result: " + std::string(result ? "success" : "failure"));
+                    forwarding_success = pusher.sendMessage("New SMS from " + sender, content);
+                    LOG_DEBUG("WxPusher sendMessage result: " + std::string(forwarding_success ? "success" : "failure"));
+
+                    // Only delete SMS if forwarding was successful and deletion is enabled
+                    if (forwarding_success && Config::getInstance().getDeleteAfterForwarding() && sms != nullptr) {
+                        if (monitor.deleteSms(sms)) {
+                            LOG_INFO("SMS from " + sender + " deleted after successful forwarding");
+                        } else {
+                            LOG_ERROR("Failed to delete SMS from " + sender + " after forwarding");
+                        }
+                    }
                 } catch (const std::exception& e) {
                     LOG_ERROR("Exception in WxPusher sendMessage: " + std::string(e.what()));
                 }

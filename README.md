@@ -97,6 +97,9 @@ apk add dbus dbus-libs modemmanager modemmanager-libs glib libcurl curl
    - `debug_mode`: Whether to enable detailed debug logging
      - `false` (default): Only log essential information (INFO, WARNING, ERROR, FATAL)
      - `true`: Log detailed debug information (DEBUG level messages)
+   - `delete_after_forwarding`: Whether to delete SMS messages after successful forwarding
+     - `false` (default): Keep SMS messages after forwarding
+     - `true`: Delete SMS messages after they have been successfully forwarded (only if forwarding succeeds)
 
 2. Ensure D-Bus and ModemManager services are running:
    ```bash
@@ -205,7 +208,14 @@ The application implements several smart features to ensure reliable SMS forward
    - It attempts to read the SMS content multiple times before giving up
    - This ensures that SMS content is fully received before processing
 
-5. **Fallback Mechanism**:
+5. **Automatic SMS Cleanup**:
+   - Option to automatically delete SMS messages after successful forwarding
+   - Only deletes messages if they were successfully forwarded to WxPusher
+   - Controlled via the `delete_after_forwarding` configuration option
+   - Helps manage storage space on devices with limited memory
+   - Uses both ModemManager API and mmcli command for reliable deletion
+
+6. **Fallback Mechanism**:
    - If the ModemManager API fails to provide SMS content after retries
    - The application falls back to using the `mmcli` command-line tool
    - This provides an additional layer of reliability

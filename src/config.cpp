@@ -53,6 +53,10 @@ bool Config::load(const std::string& config_path) {
                 // Convert string to boolean
                 debug_mode = (value == "true" || value == "1" || value == "yes");
             }
+            else if (key == "delete_after_forwarding") {
+                // Convert string to boolean
+                delete_after_forwarding = (value == "true" || value == "1" || value == "yes");
+            }
         }
     }
 

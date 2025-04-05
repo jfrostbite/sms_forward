@@ -14,6 +14,7 @@
 
 #include "sms_monitor.hpp"
 #include "logger.hpp"
+#include "config.hpp"
 #include <stdexcept>
 #include <ModemManager.h>
 #include <libmm-glib.h>
@@ -141,7 +142,7 @@ void SmsMonitor::processSms(MMSms* sms) {
         LOG_DEBUG("SMS content: " + std::string(text));
 
         LOG_DEBUG("Calling callback with number=" + std::string(number) + ", text=" + std::string(text));
-        callback(number, text);
+        callback(number, text, sms);
         LOG_DEBUG("Callback completed");
     } else {
         LOG_ERROR("processSms: Text or number is still null after " +
@@ -202,7 +203,7 @@ void SmsMonitor::processSms(MMSms* sms) {
                         LOG_DEBUG("SMS content: " + parsed_text);
 
                         // Call the callback directly
-                        callback(parsed_number.c_str(), parsed_text.c_str());
+                        callback(parsed_number.c_str(), parsed_text.c_str(), nullptr);
                     }
                 }
             }
@@ -295,6 +296,119 @@ void SmsMonitor::checkExistingSms() {
     g_list_free_full(modems, g_object_unref);
     g_object_unref(manager);
     g_object_unref(connection);
+}
+
+bool SmsMonitor::deleteSms(MMSms* sms) {
+    if (!sms) {
+        LOG_ERROR("deleteSms: SMS is null");
+        return false;
+    }
+
+    // Get the SMS path for logging
+    const char* sms_path = mm_sms_get_path(sms);
+    if (!sms_path) {
+        LOG_ERROR("deleteSms: SMS path is null");
+        return false;
+    }
+
+    std::string path_str = std::string(sms_path);
+    LOG_DEBUG("Attempting to delete SMS at path: " + path_str);
+
+    // Try to get the modem messaging interface
+    GError* error = nullptr;
+    GDBusConnection* connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, nullptr, &error);
+    if (error) {
+        LOG_ERROR("Failed to get GDBus connection: " + std::string(error->message));
+        g_error_free(error);
+        return false;
+    }
+
+    // Create ModemManager Manager proxy
+    MMManager* manager = mm_manager_new_sync(
+        connection,
+        G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
+        nullptr,  // cancellable
+        &error
+    );
+
+    if (error) {
+        LOG_ERROR("Failed to create ModemManager proxy: " + std::string(error->message));
+        g_error_free(error);
+        g_object_unref(connection);
+        return false;
+    }
+
+    // Get all modems
+    GList* modems = g_dbus_object_manager_get_objects(G_DBUS_OBJECT_MANAGER(manager));
+    if (!modems) {
+        LOG_WARNING("No modems found");
+        g_object_unref(manager);
+        g_object_unref(connection);
+        return false;
+    }
+
+    bool success = false;
+
+    // Process each modem
+    for (GList* m = modems; m && !success; m = g_list_next(m)) {
+        MMObject* modem_obj = MM_OBJECT(m->data);
+        MMModemMessaging* messaging = mm_object_get_modem_messaging(modem_obj);
+
+        if (!messaging) {
+            LOG_DEBUG("Modem does not support messaging");
+            continue;
+        }
+
+        // Try to delete the SMS using ModemManager API
+        success = mm_modem_messaging_delete_sync(messaging, sms_path, nullptr, &error);
+        if (error) {
+            LOG_ERROR("Failed to delete SMS: " + std::string(error->message));
+            g_error_free(error);
+            error = nullptr;
+        }
+
+        if (success) {
+            LOG_INFO("Successfully deleted SMS using ModemManager API");
+        }
+
+        g_object_unref(messaging);
+
+        if (success) {
+            break;
+        }
+    }
+
+    // Cleanup
+    g_list_free_full(modems, g_object_unref);
+    g_object_unref(manager);
+    g_object_unref(connection);
+
+    // If ModemManager API failed, try using mmcli as a fallback
+    if (!success) {
+        // Extract the SMS index from the path
+        const char* sms_index_str = strrchr(sms_path, '/');
+        if (!sms_index_str) {
+            LOG_ERROR("deleteSms: Failed to extract SMS index from path");
+            return false;
+        }
+
+        sms_index_str++; // Skip the '/' character
+        int sms_index = atoi(sms_index_str);
+        LOG_DEBUG("Attempting to delete SMS using mmcli for SMS index " + std::to_string(sms_index));
+
+        // Delete the SMS using mmcli
+        std::string cmd = "mmcli -m 0 --messaging-delete-sms=" + std::to_string(sms_index);
+        int result = system(cmd.c_str());
+        if (result == 0) {
+            LOG_INFO("Successfully deleted SMS using mmcli");
+            return true;
+        } else {
+            LOG_ERROR("Failed to delete SMS using mmcli, return code: " + std::to_string(result));
+            return false;
+        }
+    }
+
+    return success;
 }
 
 void SmsMonitor::handleMessage(DBusMessage* message, void* user_data) {
@@ -489,7 +603,7 @@ void SmsMonitor::handleMessage(DBusMessage* message, void* user_data) {
 
                                 // Call the callback directly
                                 if (monitor->callback) {
-                                    monitor->callback(number, text);
+                                    monitor->callback(number, text, nullptr);
                                 }
 
                                 found_sms = true;
