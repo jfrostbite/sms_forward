@@ -35,33 +35,6 @@ bool isVerificationCode(const std::string& message) {
             return true;
         }
 
-        // Common verification code patterns in Chinese SMS messages
-        try {
-            static const std::vector<std::regex> patterns = {
-                std::regex("[\u9a8c\u8b49]\u8bc1\u7801[\uff1a:][\\s]*([0-9]{4,6})"),  // Verification code: 123456
-                std::regex("[\u7801\u78bc]\u662f[\\s]*([0-9]{4,6})"),       // Code is 123456
-                std::regex("[0-9]{4,6}[\\s]*\u662f[^0-9]*\u9a8c\u8bc1\u7801"),  // 123456 is your verification code
-                std::regex("\u9a8c\u8bc1\u7801[^0-9]*[0-9]{4,6}"),           // Verification code 123456
-                std::regex("[0-9]{4,6}\uff08[^\uff09]*\u9a8c\u8bc1[^\uff09]*\uff09"),    // 123456 (verification)
-                std::regex("\\[.*\\][^0-9]*([0-9]{4,6})")
-            };
-
-            // Check if the message matches any of the patterns
-            for (const auto& pattern : patterns) {
-                try {
-                    if (std::regex_search(message, pattern)) {
-                        return true;
-                    }
-                } catch (const std::exception& e) {
-                    LOG_ERROR("Exception in regex_search: " + std::string(e.what()));
-                    // Continue with next pattern
-                }
-            }
-        } catch (const std::exception& e) {
-            LOG_ERROR("Exception in patterns initialization: " + std::string(e.what()));
-            // Continue with keyword check
-        }
-
         // Check for common verification code keywords
         try {
             static const std::vector<std::string> keywords = {
